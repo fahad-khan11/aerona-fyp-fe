@@ -80,6 +80,7 @@
     "react-hook-form": "^7.54.1",
     "react-hot-toast": "^2.5.2",
     "react-i18next": "^15.6.1",
+    "react-markdown": "^10.1.0",
     "react-phone-input-2": "^2.15.1",
     "react-resizable-panels": "^2.1.7",
     "react-select": "^5.10.2",

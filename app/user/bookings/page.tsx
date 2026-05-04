@@ -27,6 +27,9 @@ import { ReviewModal } from "@/components/ui/Review-Modal"
 import { getCurrencyByLocation } from "@/lib/utils/location-currency"
 import { formatPrice } from "@/lib/utils/currency"
 import BookingPdfGenerator from "@/lib/hotelpdfgenerator"
+import ReactMarkdown from 'react-markdown'
+import { GenerateAiItinerary } from "@/lib/api"
+import { useAuth } from "@/store/authContext"
 
 // Sample data
 const sampleBookings = [
@@ -113,6 +116,7 @@ export default function ModernBookingInterface() {
 const [loading, setLoading] = useState(true);
   const [selectedcurrency,setSelectedCurrency]=useState("USD");
    const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({ USD: 1 })
+  const { auth } = useAuth();
 
 
  useEffect(()=>
@@ -885,8 +889,6 @@ setSelectedHotelId(booking.hotel.id);
       </div>
 
  
-
-        <ToastContainer position="top-right" autoClose={3000} />
     </div>
   )
 }

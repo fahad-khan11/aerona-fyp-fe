@@ -6,6 +6,7 @@ import {
   Bell, HelpCircle, LogOut, StarIcon, 
   Star, TicketCheck,
   Package,
+  Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -25,6 +26,7 @@ const Sidebar = () => {
 
   { icon: <Package size={20} />, title: 'My Umrah Booking', path: '/user/umrah-package' },
 
+  { icon: <Sparkles size={20} />, title: 'Smart AI Itinerary', path: '/user/itinerary' },
 
   { icon: <UserCircle size={20} />, title: 'Profile', path: '/user/profile' },
   { icon: <Star size={20} />, title: 'My Reviews', path: '/user/reviews' },

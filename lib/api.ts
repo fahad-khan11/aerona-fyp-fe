@@ -2411,26 +2411,39 @@ console.log("Pening: ",response);
 
 
 
-export const  sendResetEmail = async (email:string) => {
+export const sendResetEmail = async (email: string) => {
   try {
 
-const response = await axios.post(
-  baseURL + `user/confirm/email?email=${email}`
-  
- 
-);
+    const response = await axios.post(
+      baseURL + `user/confirm/email?email=${email}`
 
-   
+
+    );
+
+
 
     // Update local state with the newly created hotel (including its ID)
     return response.data
 
-    
+
   } catch (error: any) {
-   if (error.response && error.response.data?.message) {
+    if (error.response && error.response.data?.message) {
       throw new Error(error.response.data.message)
     } else {
       throw new Error("Hotel Register  Failed. Please try again.")
+    }
+  }
+};
+
+export const GenerateAiItinerary = async (userId: number) => {
+  try {
+    const response = await axios.post(baseURL + "ai/generate-itinerary", { userId });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data?.message) {
+      throw new Error(error.response.data.message);
+    } else {
+      throw new Error("Failed to generate AI itinerary. Please try again.");
     }
   }
 };
