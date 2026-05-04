@@ -27,10 +27,16 @@ export default function AIItineraryPage() {
     
     try {
       const result = await GenerateAiItinerary(auth.id);
+      
+      if (!result || result.includes("AI configuration error") || result.includes("I'm sorry, I encountered an error")) {
+        toast.error("Please try again later.");
+        return;
+      }
+
       setAiResponse(result);
       toast.success("Itinerary generated successfully!");
     } catch (error) {
-      toast.error("Failed to generate AI itinerary.");
+      toast.error("Please try again later.");
     } finally {
       setIsLoading(false);
     }
