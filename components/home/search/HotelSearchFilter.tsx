@@ -21,6 +21,7 @@ const CACHE_DURATION = 5 * 60 * 1000
 import { CustomCalendar } from "./CustomCalendar"
 import type { CityResult } from "./types"
 import { Send } from "lucide-react"
+import { GetHotelsPublic } from "@/lib/api"
 
 type HotelSearchFilterProps = {
   initialValues?: Partial<SearchInputs>
@@ -141,8 +142,9 @@ export default function HotelSearchFilter({ initialValues, onChange, selectcity 
       })
 
       console.log("Auto-complete response : ", response.data)
-      const suggestions = response.data || []
-
+      const suggestions = response.data || {}
+      const places = suggestions.places || suggestions.place || (Array.isArray(suggestions) ? suggestions : [])
+      
       if (query.toLowerCase() == "madina") {
         const predefinedSuggestion: CityResult = {
           id: "3_135486",
@@ -159,7 +161,7 @@ export default function HotelSearchFilter({ initialValues, onChange, selectcity 
           nr_hotels: 1396,
         }
         // Add predefined suggestion in second place
-        suggestions.splice(1, 0, predefinedSuggestion)
+        places.splice(1, 0, predefinedSuggestion)
       }
       if (query.toLowerCase() == "mecca") {
         const predefinedSuggestion: CityResult = {
@@ -177,15 +179,15 @@ export default function HotelSearchFilter({ initialValues, onChange, selectcity 
           nr_hotels: 1396,
         }
         // Add predefined suggestion in second place
-        suggestions.splice(1, 0, predefinedSuggestion)
+        places.splice(1, 0, predefinedSuggestion)
       }
 
       console.log(" response.data.data : ", response.data)
       cityCache.set(query.toLowerCase(), {
-        data: suggestions,
+        data: places,
         timestamp: Date.now(),
       })
-      setCitySuggestions(suggestions.places)
+      setCitySuggestions(places)
     } catch (err: any) {
       if (err.name !== "AbortError" && err.name !== "CanceledError") {
         setCitySuggestions([])
@@ -312,7 +314,10 @@ export default function HotelSearchFilter({ initialValues, onChange, selectcity 
             },
           })
 
-          const destination = destinationRes.data.place[0]
+          const suggestions = destinationRes.data || {}
+          const places = suggestions.places || suggestions.place || (Array.isArray(suggestions) ? suggestions : [])
+          const destination = places[0]
+          
           if (!destination || !destination.id) {
             setHotelSearchError("City not found. Please enter a valid city name.")
             setHotelLoading(false)
@@ -321,6 +326,13 @@ export default function HotelSearchFilter({ initialValues, onChange, selectcity 
 
           id = destination.id
           typeName = destination.typeName
+        }
+
+        // Safety check to ensure we have a valid ID and type before proceeding
+        if (!id || !typeName) {
+          setHotelSearchError("Location details not found. Please try selecting the city from the suggestions.")
+          setHotelLoading(false)
+          return
         }
 
         const checkInDate = hotelSearch.checkIn || new Date().toISOString().split("T")[0]
@@ -369,38 +381,55 @@ export default function HotelSearchFilter({ initialValues, onChange, selectcity 
           setHotelLoading(false)
           return
         }
-console.log("Searching hotels with: ",  {
-            typeName,
-            id: id,
-            checkinDate: checkInDate,
-            checkoutDate: checkOutDate,
-            limit: 100,
-            adult: adults,
-            room_qty: roomQty,
-            language: "en-us",
-            currency: "USD",
-          },)
-        // Perform search
-        const searchRes = await axios.get("https://agoda-com.p.rapidapi.com/hotels/search-overnight", {
-          params: {
-            typeName,
-            id: "1_"+id,
-            checkinDate: checkInDate,
-            checkoutDate: checkOutDate,
-            limit: 100,
-            adult: adults,
-            room_qty: roomQty,
-            language: "en-us",
-            currency: "USD",
-          },
-          headers: {
-            "x-rapidapi-key": process.env.NEXT_PUBLIC_RAPIDAPI_KEY,
-            "x-rapidapi-host": "agoda-com.p.rapidapi.com",
-          },
+        console.log("Searching hotels with: ", {
+          typeName,
+          id: id,
+          checkinDate: checkInDate,
+          checkoutDate: checkOutDate,
+          limit: 100,
+          adult: adults,
+          room_qty: roomQty,
+          language: "en-us",
+          currency: "USD",
         })
 
+        // Prepare Agoda ID with correct prefix
+        const agodaId = id && String(id).includes("_") ? id : "1_" + id
+
+        // Perform backend and Agoda searches in parallel for better performance
+        const results = await Promise.all([
+          GetHotelsPublic(locationQuery).catch((err) => {
+            console.error("Backend fetch failed:", err)
+            return []
+          }),
+          axios.get("https://agoda-com.p.rapidapi.com/hotels/search-overnight", {
+            params: {
+              typeName,
+              id: agodaId,
+              checkinDate: checkInDate,
+              checkoutDate: checkOutDate,
+              limit: 100,
+              adult: adults,
+              room_qty: roomQty,
+              language: "en-us",
+              currency: "USD",
+            },
+            headers: {
+              "x-rapidapi-key": process.env.NEXT_PUBLIC_RAPIDAPI_KEY,
+              "x-rapidapi-host": "agoda-com.p.rapidapi.com",
+            },
+          })
+        ])
+
+        const ourHotelsRes = results[0]
+        const searchRes = results[1] as any
+
         console.log("searchRes : ", searchRes)
-        const hotels = searchRes.data.data.properties || []
+        
+        // Extract Agoda data robustly
+        const agodaData = searchRes.data?.data || searchRes.data || {}
+        const hotels = agodaData.citySearch?.properties || agodaData.properties || (Array.isArray(agodaData) ? agodaData : [])
+        const filters = agodaData.citySearch?.filters || agodaData.filters || {}
        
 
         // Save in sessionStorage
@@ -418,10 +447,11 @@ localStorage.removeItem("searchResults");
             "searchResults",
             JSON.stringify({
               hotels,
-              filters: searchRes.data.data.filters,
+              ourHotels: ourHotelsRes, // Store our hotels in session as well
+              filters: filters,
               search: {
                 location: locationQuery,
-                id,
+                id: agodaId, // Save the prefixed ID for subsequent API calls
                 typeName,
                 checkIn: checkInDate,
                 checkOut: checkOutDate,

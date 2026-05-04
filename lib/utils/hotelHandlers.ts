@@ -29,8 +29,6 @@ setLoading: (cb: (prev: LoadingState) => LoadingState) => void, setError: (err: 
     if (!searchResults) throw new Error("No hotel data found in session storage.");
     
     const parsed = JSON.parse(searchResults);
-    
-    // Debug the parsed search results
     console.log("Parsed search results:", parsed.search);
     
     // Set search and city info
@@ -47,23 +45,36 @@ setLoading: (cb: (prev: LoadingState) => LoadingState) => void, setError: (err: 
     const checkOutDate = new Date(parsed.search?.checkOut || checkout);
     const diffTime = checkOutDate.getTime() - checkInDate.getTime();
     const numberOfDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+    // ── Agoda hotels (may be empty if API quota exceeded or city not found on Agoda) ──
+    const agodaHotels = Array.isArray(parsed.hotels) ? parsed.hotels : [];
     
-    // Make sure hotels exist and are in an array format
-    if (!Array.isArray(parsed.hotels) || parsed.hotels.length === 0) {
-      console.warn("No hotels found in parsed data");
+    if (agodaHotels.length > 0) {
+      console.log(`Mapping ${agodaHotels.length} Agoda hotels with ${numberOfDays} days stay`);
+      const mappedHotels: HotelAPI[] = agodaHotels
+        .map((hotel: any) => mapHotelToAPI(hotel, numberOfDays))
+        .filter((hotel: HotelAPI | undefined) => hotel !== undefined);
+      setHotelOffers(mappedHotels);
+
+      const prices = mappedHotels
+        .map((h) => h.property.priceBreakdown?.grossPrice?.value || 0)
+        .filter((p) => p > 0);
+      if (prices.length > 0) {
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        setBasePriceRange([minPrice, maxPrice]);
+        setFilters((prev) => ({ ...prev, priceRange: [minPrice, maxPrice] }));
+      }
+    } else {
+      console.warn("No Agoda hotels in session — only DB hotels will be shown.");
       setHotelOffers([]);
-     
-     
     }
-    
-    console.log(`Mapping ${parsed.hotels.length} hotels with ${numberOfDays} days stay`);
-    
-    // Map hotels to our API format
-    const mappedHotels: HotelAPI[] = parsed.hotels
-      .map((hotel: any) => mapHotelToAPI(hotel, numberOfDays))
-      .filter((hotel: HotelAPI | undefined) => hotel !== undefined);
-    setHotelOffers(mappedHotels);
-    setApiFilters(parsed.filters);
+
+    if (parsed.filters) {
+      setApiFilters(parsed.filters);
+    }
+
+    // ── Always fetch our own DB hotels for the searched city ──
     try {
       const ourHotels = await GetHotelsPublic(city);
       setHotels(Array.isArray(ourHotels) ? ourHotels : []);
@@ -71,20 +82,16 @@ setLoading: (cb: (prev: LoadingState) => LoadingState) => void, setError: (err: 
       console.error("Error fetching local hotels:", error);
       setHotels([]);
     }
-    
-    const prices = mappedHotels.map((h) => h.property.priceBreakdown?.grossPrice?.value || 0).filter((p) => p > 0);
-    if (prices.length > 0) {
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-      setBasePriceRange([minPrice, maxPrice]);
-      setFilters((prev) => ({
-            ...prev,
-            priceRange: [minPrice, maxPrice],
-          }))
-        
-    }
+
   } catch (err: any) {
-    setError("No hotels found for this search criteria.");
+    // If session is broken, still try to load our DB hotels so page isn't blank
+    try {
+      const ourHotels = await GetHotelsPublic(city);
+      setHotels(Array.isArray(ourHotels) ? ourHotels : []);
+      setHotelOffers([]);
+    } catch (_) {
+      setError("No hotels found for this search criteria.");
+    }
   } finally {
     setLoading((prev) => ({ ...prev, initial: false }));
   }

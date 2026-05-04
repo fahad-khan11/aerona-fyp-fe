@@ -991,40 +991,40 @@ export default function OptimizedHotelResults() {
              
             )}
 
-            {/* Debug logs for hotel data */}
-            {(() => {
-              console.log("sortedHotels:", sortedHotels?.length || 0)
-              console.log("hotelOffers:", hotelOffers?.length || 0)
-              console.log("hotels:", hotels?.length || 0)
-              return null
-            })()}
-            {!sortedHotels || sortedHotels.length === 0 ? (
-              <HotelsNoResults onClearFilters={clearFilters} />
-            ) : (
-                viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-2 lg:gap-4">
-  {sortedHotels.filter((hotel) => hotel.property.priceBreakdown?.grossPrice?.value > 0).map((hotel, index) => (
-    
-    <HotelCard
-      key={hotel.property.id}
-      hotel={hotel}
-      index={index}
-      checkIn={checkIn}
-      checkOut={checkOut}
-      getDistanceFromCityCenter={(hotel) => getDistanceFromCityCenter(hotel, cityCoords)}
-      getReviewRatingRange={getReviewRatingRange}
-      convertPrice={(price, fromCurrency, toCurrency) =>
-        convertPrice(price, exchangeRates, selectedCurrency, fromCurrency, toCurrency)
-      }
-      selectedCurrency={selectedCurrency}
-        travelers={search?.travelers}
-      formatPrice={formatPrice}
-      grid={true}
-    />
-  ))}
-</div>):(
-
-   <div className="flex flex-col gap-4 lg:gap-6">
+            {/* Agoda Hotels Section */}
+            {sortedHotels && sortedHotels.length > 0 && (
+              <>
+                {/* Section divider when we also have our own DB hotels */}
+                {hotels.length > 0 && (
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2">Also available from Agoda</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+                )}
+                {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-2 lg:gap-4">
+                    {sortedHotels.filter((hotel) => hotel.property.priceBreakdown?.grossPrice?.value > 0).map((hotel, index) => (
+                      <HotelCard
+                        key={hotel.property.id}
+                        hotel={hotel}
+                        index={index}
+                        checkIn={checkIn}
+                        checkOut={checkOut}
+                        getDistanceFromCityCenter={(hotel) => getDistanceFromCityCenter(hotel, cityCoords)}
+                        getReviewRatingRange={getReviewRatingRange}
+                        convertPrice={(price, fromCurrency, toCurrency) =>
+                          convertPrice(price, exchangeRates, selectedCurrency, fromCurrency, toCurrency)
+                        }
+                        selectedCurrency={selectedCurrency}
+                        travelers={search?.travelers}
+                        formatPrice={formatPrice}
+                        grid={true}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4 lg:gap-6">
                     {sortedHotels.filter((hotel) => hotel.property.priceBreakdown?.grossPrice?.value > 0).map((hotel, index) => (
                       <HotelCard
                         key={hotel.property.id}
@@ -1042,12 +1042,17 @@ export default function OptimizedHotelResults() {
                       />
                     ))}
                   </div>
-)
+                )}
+              </>
+            )}
 
+            {/* Show no results only when BOTH sources have nothing */}
+            {(!sortedHotels || sortedHotels.length === 0) && hotels.length === 0 && (
+              <HotelsNoResults onClearFilters={clearFilters} />
             )}
 
             {/* Load More Button */}
-            {hasMore && sortedHotels.length > 0 && (
+            {hasMore && sortedHotels && sortedHotels.length > 0 && (
               <HotelsLoadMore onClick={loadMoreHotels} loading={loading.loadingMore} />
             )}
           </motion.section>
