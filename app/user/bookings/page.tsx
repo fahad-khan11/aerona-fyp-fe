@@ -280,7 +280,7 @@ useEffect(() => {
     },
   }
    const getBookingDetails = (id: number) => {
-    const allBookings = [...UpCommingBookings]
+    const allBookings = [...UpCommingBookings, ...PastBookings, ...CancelledBooking]
     return allBookings.find((booking) => booking.id === id)
   }
 
@@ -522,7 +522,7 @@ const onPostReview =async (data:any) => {
              <div className="flex items-center gap-1.5 text-gray-500 text-sm">
   <MapPin className="w-4 h-4 text-gray-400" />
   <span className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-violet-600 transition-colors duration-300 truncate whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] sm:max-w-[300px]">
-    {booking.hotel?.Address}
+    {typeof booking.hotel?.Address === 'string' ? booking.hotel?.Address : (booking.hotel?.Address as any)?.name || ""}
   </span>
 </div>
               <div className="flex items-center gap-2">
@@ -557,21 +557,23 @@ const onPostReview =async (data:any) => {
               
                 
             ].map(({ icon: Icon, label, value, color }, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 + i * 0.1 + 0.4 }}
-                className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-md transition-all duration-300"
-              >
-                <div className={`p-2 bg-gradient-to-r ${color} rounded-xl shadow-lg`}>
-                  <Icon className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 text-sm">{label}</div>
-                  <div className="text-gray-600 text-xs truncate">{value}</div>
-                </div>
-              </motion.div>
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 + i * 0.1 + 0.4 }}
+                  className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-md transition-all duration-300"
+                >
+                  <div className={`p-2 bg-gradient-to-r ${color} rounded-xl shadow-lg`}>
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 text-sm">{label}</div>
+                    <div className="text-gray-600 text-xs truncate">
+                      {typeof value === 'string' ? value : (value as any)?.name || (value as any)?.type || ""}
+                    </div>
+                  </div>
+                </motion.div>
             ))}
        
           </div>
@@ -745,11 +747,11 @@ const onPostReview =async (data:any) => {
               </div>
               <div>
                 <div className="font-semibold text-gray-900 text-sm">{label}</div>
-                <div className="text-gray-600 text-xs truncate">{value}</div>
+                <div className="text-gray-600 text-xs truncate">
+                  {typeof value === 'string' ? value : (value as any)?.name || (value as any)?.type || ""}
+                </div>
               </div>
 
-
-         
             </motion.div>
             
           ))}

@@ -116,8 +116,9 @@ export default function BookingDetailsPage({ booking, onBack }: BookingDetailsPa
   ]
 
   // Room amenities
-const getAmenityIcon = (amenity: string) => {
-  const amenityLower = amenity.toLowerCase().replace(/[^a-z]/g, "")
+const getAmenityIcon = (amenity: any) => {
+  const amenityName = typeof amenity === 'string' ? amenity : (amenity?.name || amenity?.type || "");
+  const amenityLower = amenityName.toLowerCase().replace(/[^a-z]/g, "")
 
   // Hotel amenities
   if (amenityLower.includes("wifi") || amenityLower === "wifi") return <Wifi className="w-4 h-4 text-white" />
@@ -286,7 +287,9 @@ if (!booking || !booking?.hotel) {
           {getAmenityIcon(amenity)}
         </div>
         <div>
-          <div className="font-medium text-gray-800 text-sm capitalize">{amenity}</div>
+          <div className="font-medium text-gray-800 text-sm capitalize">
+            {typeof amenity === 'string' ? amenity : (amenity?.name || amenity?.type || "Amenity")}
+          </div>
         </div>
       </div>
 
@@ -375,7 +378,9 @@ if (!booking || !booking?.hotel) {
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-xl font-bold text-[#023e8a] mb-2">{room.roomType}</h3>
+          <h3 className="text-xl font-bold text-[#023e8a] mb-2">
+            {typeof room.roomType === 'string' ? room.roomType : (room.roomType as any)?.name || (room.roomType as any)?.type || "Room"}
+          </h3>
           <p className="text-gray-600">
             Spacious and elegantly designed room featuring modern amenities and stunning ocean views.
             Perfect for a comfortable and luxurious stay.
@@ -402,7 +407,11 @@ if (!booking || !booking?.hotel) {
               <Bed className="w-4 h-4 text-[#023e8a]" />
               <span className="font-semibold text-sm">Bed Type</span>
             </div>
-            <span className="text-sm text-gray-600">{room.bedConfiguration}</span>
+            <span className="text-sm text-gray-600">
+              {Array.isArray(room.bedConfiguration) 
+                ? room.bedConfiguration.map(b => (typeof b === 'string' ? b : (b as any)?.name || (b as any)?.type || JSON.stringify(b))).join(", ")
+                : (typeof room.bedConfiguration === 'string' ? room.bedConfiguration : "")}
+            </span>
           </div>
         </div>
       </div>
@@ -421,7 +430,9 @@ if (!booking || !booking?.hotel) {
               {getAmenityIcon(amenity)}
             </div>
             <div>
-              <div className="font-medium text-gray-800 text-sm capitalize">{amenity}</div>
+              <div className="font-medium text-gray-800 text-sm capitalize">
+                {typeof amenity === 'string' ? amenity : (amenity?.name || amenity?.type || "Amenity")}
+              </div>
             </div>
           </div>
         ))}
