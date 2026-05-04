@@ -298,7 +298,7 @@ if (!booking || !booking?.hotel) {
                   </div>
                 </div>
 
-                {/* Contact & Location */}
+           
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
   <div className="space-y-4">
     <div className="border-b border-gray-200 pb-1">
