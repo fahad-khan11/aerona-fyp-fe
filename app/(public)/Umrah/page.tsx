@@ -21,7 +21,7 @@ export default function UmrahPackagesPage() {
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState("")
   const [packageType, setPackageType] = useState("all")
-  const [priceRange, setPriceRange] = useState([1000, 5000])
+  const [priceRange, setPriceRange] = useState([0, 10000])
   const [duration, setDuration] = useState("all")
   const [starRating, setStarRating] = useState("all")
   const [sortBy, setSortBy] = useState("best-match")
@@ -112,8 +112,8 @@ export default function UmrahPackagesPage() {
           response = await GetUmrahPakageall()
         }
 
-        console.log(response)
-        setUmrahPackages(response)
+        console.log("Umrah API Response:", response)
+        setUmrahPackages(Array.isArray(response) ? response : (response ? [response] : []))
       } catch (error) {
         console.error("Error fetching packages:", error)
         setUmrahPackages([])
@@ -131,10 +131,13 @@ export default function UmrahPackagesPage() {
         pkg?.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pkg?.citiesCovered.some((city) => city.toLowerCase().includes(searchTerm.toLowerCase()))
 
+      const pkgCurrency = pkg.currency || "PKR"
+      const conversionRate = exchangeRates[pkgCurrency] || 1
       const matchesType = packageType === "all" || pkg.packageType.toLowerCase() === packageType.toLowerCase()
-
       const lowestPrice = Math.min(pkg.doubleSharingPrice, pkg.trippleSharingPrice, pkg.quadSharingPrice)
-      const matchesPrice = lowestPrice >= priceRange[0] && lowestPrice <= priceRange[1]
+      const lowestPriceUSD = lowestPrice / conversionRate
+      
+      const matchesPrice = lowestPriceUSD >= priceRange[0] && lowestPriceUSD <= priceRange[1]
 
       const matchesDuration =
         duration === "all" ||
@@ -244,29 +247,34 @@ export default function UmrahPackagesPage() {
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
-                    max={5000}
-                    min={1000}
-                    step={100}
+                    max={10000}
+                    min={0}
+                    step={10}
                     className="w-full"
                   />
                   <div className="flex gap-2">
                     <div className="flex items-center gap-1">
                       <span className="text-sm text-gray-600">MIN</span>
-
-    
-                      
                       <Input
-                        value={(priceRange[0]) * (exchangeRates[selectedCurrency] || 1)}
-                        onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                        className="w-20 h-8 text-sm"
+                        type="number"
+                        value={Math.round(priceRange[0] * (exchangeRates[selectedCurrency] || 1))}
+                        onChange={(e) => {
+                          const val = Number(e.target.value) / (exchangeRates[selectedCurrency] || 1)
+                          setPriceRange([val, priceRange[1]])
+                        }}
+                        className="w-24 h-8 text-sm"
                       />
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-sm text-gray-600">MAX</span>
                       <Input
-                        value={(priceRange[1]) * (exchangeRates[selectedCurrency] || 1)}
-                        onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                        className="w-20 h-8 text-sm"
+                        type="number"
+                        value={Math.round(priceRange[1] * (exchangeRates[selectedCurrency] || 1))}
+                        onChange={(e) => {
+                          const val = Number(e.target.value) / (exchangeRates[selectedCurrency] || 1)
+                          setPriceRange([priceRange[0], val])
+                        }}
+                        className="w-24 h-8 text-sm"
                       />
                     </div>
                   </div>
@@ -426,13 +434,11 @@ export default function UmrahPackagesPage() {
                           <Users className="h-3 w-3 text-green-600" />
                           <span className="text-green-600">
                            
-
-
-                      {formatPrice(
-                                                                                  (pkg.singlePricing* 0.05) * (exchangeRates[selectedCurrency] || 1),
-                                                                                  selectedCurrency,
-                                                                                )}
-                                                                                applied
+                       {formatPrice(
+                                (pkg.singlePricing * 0.05 / (exchangeRates[pkg.currency || "PKR"] || 1)) * (exchangeRates[selectedCurrency] || 1),
+                                selectedCurrency,
+                              )}
+                              applied
 
                           </span>
                           <span className="text-gray-500">Per night before taxes and fees</span>
@@ -443,7 +449,7 @@ export default function UmrahPackagesPage() {
                         <div className="text-right">
                           {pkg.discountPercent > 0 && (
                             <div className="text-sm text-gray-500 line-through mb-1">
-                             {Math.floor(pkg.singlePricing * 1.2).toLocaleString()}
+                              {Math.floor((pkg.singlePricing * 1.2 / (exchangeRates[pkg.currency || "PKR"] || 1)) * (exchangeRates[selectedCurrency] || 1)).toLocaleString()}
                             </div>
                           )}
                           {pkg.discountPercent > 0 && (
@@ -451,18 +457,15 @@ export default function UmrahPackagesPage() {
                           )}
                           <div className="text-2xl font-bold text-gray-900 mb-1">
                         
-                           
-
-
-                      {formatPrice(
-                                                                                  (Math.min(
-                                                                                    pkg.singlePricing,
-                              pkg.doubleSharingPrice,
-                              pkg.trippleSharingPrice,
-                              pkg.quadSharingPrice,
-                            )) * (exchangeRates[selectedCurrency] || 1),
-                                                                                  selectedCurrency,
-                                                                                )}
+                       {formatPrice(
+                                (Math.min(
+                                  pkg.singlePricing,
+                                  pkg.doubleSharingPrice,
+                                  pkg.trippleSharingPrice,
+                                  pkg.quadSharingPrice,
+                                ) / (exchangeRates[pkg.currency || "PKR"] || 1)) * (exchangeRates[selectedCurrency] || 1),
+                                selectedCurrency,
+                              )}
 
                           </div>
                           <div className="text-xs text-gray-600 mb-3">Subject to Cashback Terms</div>
@@ -493,7 +496,7 @@ export default function UmrahPackagesPage() {
                     onClick={() => {
                       setSearchTerm("")
                       setPackageType("all")
-                      setPriceRange([1000, 5000])
+                      setPriceRange([0, 10000])
                       setDuration("all")
                       setStarRating("all")
                       setSelectedAmenities([])

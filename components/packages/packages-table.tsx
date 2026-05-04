@@ -118,23 +118,20 @@ export function PackagesTable() {
 
 
  
-  useEffect(()=>
-  {
-    const allpakage = async()=>
-    {
-let response ;
-      if(auth?.role==="admin")
-      {
-
+  useEffect(() => {
+    const allpakage = async () => {
+      if (loading || !auth) return;
+      
+      let response;
+      if (auth?.role === "admin") {
         response = await GetUmrahPakageall();
-      }
-      else {
+      } else {
         response = await GetUmrahPakageallVEndor();
       }
-   setPackages(response);
-    }
+      setPackages(response || []);
+    };
     allpakage();
-  },[])
+  }, [auth, loading]);
   const filteredPackages = useMemo(() => {
     return packages.filter((pkg) => {
       const matchesSearch =
@@ -267,14 +264,14 @@ let response ;
               <CardTitle>Package Management</CardTitle>
               <CardDescription>View and manage all your Umrah packages</CardDescription>
             </div>
-             {loading === true && auth?.role !== "admin" &&(<>
-              <Link href="/dashboard/add-package">
-              <Button className="bg-gradient-to-r from-[#023e8a] to-[#00b4d8] hover:from-[#012a5e] hover:to-[#0096b8] text-white">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Package
-              </Button>
-            </Link>
-             </>)}
+            {!loading && auth?.role !== "admin" && (
+              <Link href="/umarah-pakage/add-package">
+                <Button className="bg-gradient-to-r from-[#023e8a] to-[#00b4d8] hover:from-[#012a5e] hover:to-[#0096b8] text-white">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Package
+                </Button>
+              </Link>
+            )}
            
           </div>
         </CardHeader>
@@ -476,14 +473,13 @@ let response ;
                   ? "Try adjusting your search or filters"
                   : "Get started by creating your first package"}
               </p>
-              {loading === true && auth?.role !== "admin" &&(
-<>
-<Link href="/dashboard/add-package">
-                <Button className="bg-gradient-to-r from-[#023e8a] to-[#00b4d8] hover:from-[#012a5e] hover:to-[#0096b8] text-white">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Package
-                </Button>
-              </Link></>
+              {!loading && auth?.role !== "admin" && (
+                <Link href="/umarah-pakage/add-package">
+                  <Button className="bg-gradient-to-r from-[#023e8a] to-[#00b4d8] hover:from-[#012a5e] hover:to-[#0096b8] text-white">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Package
+                  </Button>
+                </Link>
               )}
               
             </div>

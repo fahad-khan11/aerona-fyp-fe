@@ -177,7 +177,7 @@ export default function UmrahDetailPage({ params }: { params: Promise<{ id: stri
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-blue-600" />
                     <span className="text-sm">
-                      <strong>Cities:</strong> {pkg?.citiesCovered.join(", ")}
+                      <strong>Cities:</strong> {(pkg?.citiesCovered || []).join(", ")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export default function UmrahDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {pkg?.hotelImages.map((image, index) => (
+                  {(pkg?.hotelImages || []).map((image, index) => (
                     <img
                       key={index}
                       src={image || "/placeholder.svg"}
@@ -284,7 +284,7 @@ export default function UmrahDetailPage({ params }: { params: Promise<{ id: stri
                       <span className="font-medium">Meals</span>
                     </div>
                     <div className="ml-6 space-y-1">
-                      {pkg?.mealsIncluded.map((meal, index) => (
+                      {(pkg?.mealsIncluded || []).map((meal, index) => (
                         <Badge key={index} variant="outline" className="mr-2 bg-white/50 border-blue-200">
                           {meal}
                         </Badge>
@@ -376,64 +376,60 @@ export default function UmrahDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                                             {formatPrice(
+                                ( (pkg?.singlePricing || 0) / (exchangeRates[pkg?.currency || "PKR"] || 1) ) * (exchangeRates[selectedCurrency] || 1),
+                                selectedCurrency,
+                              )}
+                        </p>
+                        <p className="text-xs text-gray-500">per person</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-3 border rounded-lg backdrop-blur-sm bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200/50">
+                      <div>
+                        <p className="font-medium">Double Sharing</p>
+                        <p className="text-sm text-gray-500">2 persons per room</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                     
+                            {formatPrice(
+                                  ( (pkg?.doubleSharingPrice || 0) / (exchangeRates[pkg?.currency || "PKR"] || 1) ) * (exchangeRates[selectedCurrency] || 1),
+                                  selectedCurrency,
+                                )}
+                        </p>
+                        <p className="text-xs text-gray-500">per person</p>
+                      </div>
+                    </div>
 
+                    <div className="flex justify-between items-center p-3 border rounded-lg backdrop-blur-sm bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200/50">
+                      <div>
+                        <p className="font-medium">Triple Sharing</p>
+                        <p className="text-sm text-gray-500">3 persons per room</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                       
+                           {formatPrice(
+                                  ( (pkg?.trippleSharingPrice || 0) / (exchangeRates[pkg?.currency || "PKR"] || 1) ) * (exchangeRates[selectedCurrency] || 1),
+                                  selectedCurrency,
+                                )}
+                        </p>
+                        <p className="text-xs text-gray-500">per person</p>
+                      </div>
+                    </div>
 
-                         {formatPrice(
-                                                        ((pkg?.singlePricing||0)) * (exchangeRates[selectedCurrency] || 1),
-                                                        selectedCurrency,
-                                                      )}
-                      </p>
-                      <p className="text-xs text-gray-500">per person</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center p-3 border rounded-lg backdrop-blur-sm bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200/50">
-                    <div>
-                      <p className="font-medium">Double Sharing</p>
-                      <p className="text-sm text-gray-500">2 persons per room</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                  
-                          {formatPrice(
-                                                        ((pkg?.doubleSharingPrice||0)) * (exchangeRates[selectedCurrency] || 1),
-                                                        selectedCurrency,
-                                                      )}
-                      </p>
-                      <p className="text-xs text-gray-500">per person</p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center p-3 border rounded-lg backdrop-blur-sm bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200/50">
-                    <div>
-                      <p className="font-medium">Triple Sharing</p>
-                      <p className="text-sm text-gray-500">3 persons per room</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                     
-                         {formatPrice(
-                                                        ((pkg?.trippleSharingPrice||0)) * (exchangeRates[selectedCurrency] || 1),
-                                                        selectedCurrency,
-                                                      )}
-                      </p>
-                      <p className="text-xs text-gray-500">per person</p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center p-3 border rounded-lg backdrop-blur-sm bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200/50">
-                    <div>
-                      <p className="font-medium">Quad Sharing</p>
-                      <p className="text-sm text-gray-500">4 persons per room</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                     
-
-                         {formatPrice(
-                                                        ((pkg?.quadSharingPrice||0)) * (exchangeRates[selectedCurrency] || 1),
-                                                        selectedCurrency,
-                                                      )}
+                    <div className="flex justify-between items-center p-3 border rounded-lg backdrop-blur-sm bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200/50">
+                      <div>
+                        <p className="font-medium">Quad Sharing</p>
+                        <p className="text-sm text-gray-500">4 persons per room</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                       
+                           {formatPrice(
+                                  ( (pkg?.quadSharingPrice || 0) / (exchangeRates[pkg?.currency || "PKR"] || 1) ) * (exchangeRates[selectedCurrency] || 1),
+                                  selectedCurrency,
+                                )}
                       </p>
                       <p className="text-xs text-gray-500">per person</p>
                     </div>
