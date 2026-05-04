@@ -144,7 +144,7 @@ export default function AIItineraryPage() {
 
         {/* Bottom Tip */}
         <p className="text-center text-sm text-gray-400">
-          Powered by Aeronaa's Advanced RAG Engine & Gemini AI
+          Powered by Aeronaa's Advanced RAG Engine
         </p>
       </div>
       <ToastContainer position="top-right" />
